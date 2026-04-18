@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ ElectraVision Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=Share+Tech+Mono&display=swap');
+        :root{--bg:#030613;--volt:#ffc107;--curr:#00d4ff;--pow:#00ff88;--energy:#e040fb;--freq:#ff6b6b;--pf:#ffd93d;--danger:#ff2e63;--success:#00ff88;--warn:#ffc107;--blue:#00f5ff;--purple:#7b2ff7;--dim:rgba(255,255,255,0.35);--glass:rgba(255,255,255,0.02);--border:rgba(255,255,255,0.06)}
+        *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+        body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:#fff;overflow-x:hidden}
+        #particles-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+        .grid-bg{position:fixed;top:0;left:0;width:100%;height:100%;background-image:linear-gradient(rgba(0,245,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.03) 1px,transparent 1px);background-size:50px 50px;z-index:0;pointer-events:none}
+        .aurora{position:fixed;top:-50%;left:-50%;width:200%;height:200%;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 20% 50%,rgba(123,47,247,0.08) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(0,245,255,0.06) 0%,transparent 50%);animation:aur 15s ease-in-out infinite}
+        @keyframes aur{0%,100%{transform:translate(0,0)}50%{transform:translate(2%,-2%)}}
+        .loading-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:10000;transition:opacity .6s,visibility .6s}
+        .loading-screen.hidden{opacity:0;visibility:hidden}
+        .loader{width:50px;height:50px;border:3px solid rgba(255,255,255,0.05);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .loader-text{font-family:'Orbitron',monospace;font-size:.75rem;color:var(--dim);margin-top:15px;letter-spacing:3px}
+        .load-bar{width:180px;height:3px;background:rgba(255,255,255,0.05);border-radius:10px;margin-top:12px;overflow:hidden}
+        .load-fill{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:10px;animation:loadf 1.8s ease forwards}
+        @keyframes loadf{to{width:100%}}
+        .top-nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(3,6,19,0.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,245,255,0.1);padding:8px 25px;display:flex;justify-content:space-between;align-items:center}
+        .nav-brand{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;background:linear-gradient(90deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .nav-items{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+        .nav-dot{width:7px;height:7px;border-radius:50%;background:#555;transition:.3s}
+        .nav-dot.on{background:var(--success);box-shadow:0 0 10px var(--success);animation:ndp 2s infinite}
+        @keyframes ndp{0%,100%{box-shadow:0 0 5px var(--success)}50%{box-shadow:0 0 20px var(--success)}}
+        .nav-status{display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--dim)}
+        .nav-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:4px 12px;border-radius:8px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:.78rem;transition:.3s;display:flex;align-items:center;gap:4px}
+        .nav-btn:hover{background:rgba(123,47,247,0.2);border-color:rgba(123,47,247,0.5);color:#fff}
+        .demo-tag{background:rgba(255,46,99,0.15);border:1px solid rgba(255,46,99,0.3);color:var(--danger);padding:2px 10px;border-radius:20px;font-size:.65rem;font-weight:600;letter-spacing:1px}
+        .hero{position:relative;padding:100px 0 40px;text-align:center;z-index:1}
+        .hero-icon{font-size:3rem;margin-bottom:10px;animation:hf 3s ease-in-out infinite;display:inline-block}
+        @keyframes hf{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+        .hero h1{font-family:'Orbitron',monospace;font-size:2.8rem;font-weight:900;text-transform:uppercase;background:linear-gradient(135deg,#00f5ff,#7b2ff7,#ff2e63,#00ff88);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gs 5s ease infinite}
+        @keyframes gs{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
+        .hero p{font-size:.95rem;color:var(--dim);letter-spacing:4px;text-transform:uppercase;margin-bottom:15px}
+        .hero-meta{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+        .meta-item{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:50px;padding:5px 14px;font-size:.78rem;color:rgba(255,255,255,0.5)}
+        .meta-item i{color:var(--blue);font-size:.7rem}
+        .main{position:relative;z-index:1;padding-bottom:40px}
+        .stitle{font-family:'Orbitron',monospace;font-size:.95rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:3px;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+        .stitle::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.1),transparent)}
+        .stitle i{color:var(--purple)}
+        .mcard{position:relative;background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:18px;padding:22px;overflow:hidden;transition:all .4s cubic-bezier(.175,.885,.32,1.275)}
+        .mcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:18px 18px 0 0}
+        .mcard:hover{transform:translateY(-8px) scale(1.02);border-color:rgba(255,255,255,0.15)}
+        .mcard.alert-on{animation:af .8s infinite alternate}
+        @keyframes af{from{border-color:rgba(255,46,99,0.2)}to{border-color:rgba(255,46,99,0.6);box-shadow:0 0 30px rgba(255,46,99,0.1)}}
+        .vc::before{background:linear-gradient(90deg,var(--volt),#ff6b00)}.vc:hover{box-shadow:0 20px 50px rgba(255,193,7,0.1)}
+        .cc::before{background:linear-gradient(90deg,var(--curr),#3a7bd5)}.cc:hover{box-shadow:0 20px 50px rgba(0,212,255,0.1)}
+        .pc::before{background:linear-gradient(90deg,var(--pow),#60efff)}.pc:hover{box-shadow:0 20px 50px rgba(0,255,136,0.1)}
+        .ec::before{background:linear-gradient(90deg,var(--energy),#7c4dff)}.ec:hover{box-shadow:0 20px 50px rgba(224,64,251,0.1)}
+        .fc::before{background:linear-gradient(90deg,var(--freq),#ee5a24)}.fc:hover{box-shadow:0 20px 50px rgba(255,107,107,0.1)}
+        .pfc::before{background:linear-gradient(90deg,var(--pf),#ff8a00)}.pfc:hover{box-shadow:0 20px 50px rgba(255,217,61,0.1)}
+        .cibg{position:absolute;right:-12px;top:-12px;font-size:7rem;opacity:.02;transition:.4s}
+        .mcard:hover .cibg{opacity:.05;transform:rotate(12deg) scale(1.1)}
+        .ctop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px}
+        .clbl{font-size:.8rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim)}
+        .clbl i{margin-right:4px}
+        .tbadge{font-size:.65rem;padding:2px 8px;border-radius:20px;display:flex;align-items:center;gap:3px;font-weight:600}
+        .tup{background:rgba(0,255,136,0.1);color:var(--success)}.tdn{background:rgba(255,46,99,0.1);color:var(--danger)}.tst{background:rgba(255,255,255,0.05);color:var(--dim)}
+        .vrow{display:flex;align-items:baseline;gap:5px;margin:5px 0}
+        .vtxt{font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;line-height:1;transition:.3s}
+        .utxt{font-size:.9rem;color:rgba(255,255,255,0.25)}
+        .vv{color:var(--volt);text-shadow:0 0 18px rgba(255,193,7,0.3)}.cv{color:var(--curr);text-shadow:0 0 18px rgba(0,212,255,0.3)}.pv{color:var(--pow);text-shadow:0 0 18px rgba(0,255,136,0.3)}.ev{color:var(--energy);text-shadow:0 0 18px rgba(224,64,251,0.3)}.fv{color:var(--freq);text-shadow:0 0 18px rgba(255,107,107,0.3)}.pfv{color:var(--pf);text-shadow:0 0 18px rgba(255,217,61,0.3)}.vdanger{color:var(--danger)!important;text-shadow:0 0 25px rgba(255,46,99,0.5)!important}
+        .mstats{display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04)}
+        .mst{text-align:center}.mst-l{font-size:.58rem;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.2)}.mst-v{font-family:'Share Tech Mono',monospace;font-size:.78rem;color:rgba(255,255,255,0.5)}
+        .mbar-c{margin-top:10px;height:3px;background:rgba(255,255,255,0.04);border-radius:10px;overflow:hidden}
+        .mbar{height:100%;border-radius:10px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+        .vbar{background:linear-gradient(90deg,var(--volt),#ff6b00)}.cbar{background:linear-gradient(90deg,var(--curr),#3a7bd5)}.pbar{background:linear-gradient(90deg,var(--pow),#60efff)}.ebar{background:linear-gradient(90deg,var(--energy),#7c4dff)}.fbar{background:linear-gradient(90deg,var(--freq),#ee5a24)}.pfbar{background:linear-gradient(90deg,var(--pf),#ff8a00)}
+        .qring{position:relative;width:140px;height:140px;margin:8px auto}
+        .qring svg{width:100%;height:100%;transform:rotate(-90deg)}
+        .rbg{fill:none;stroke:rgba(255,255,255,0.04);stroke-width:10}
+        .rfill{fill:none;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset 1.2s ease;filter:drop-shadow(0 0 5px currentColor)}
+        .rcenter{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+        .rval{font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:900}.rlbl{font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim)}
+        .cpanel{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:18px;padding:22px}
+        .chdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:6px}
+        .chtl{font-family:'Orbitron',monospace;font-size:.85rem;color:rgba(255,255,255,0.6);display:flex;align-items:center;gap:7px}
+        .ldot{width:7px;height:7px;border-radius:50%;background:var(--danger);animation:lb 1s infinite}
+        @keyframes lb{0%,100%{opacity:1}50%{opacity:.3}}
+        .cbtn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);padding:3px 10px;border-radius:6px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:.75rem;transition:.3s}
+        .cbtn:hover,.cbtn.act{background:rgba(123,47,247,0.15);border-color:rgba(123,47,247,0.4);color:#fff}
+        .alert-c{position:fixed;top:55px;right:12px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:320px;width:100%}
+        .atoast{background:rgba(10,15,30,0.95);backdrop-filter:blur(20px);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;animation:asin .5s cubic-bezier(.175,.885,.32,1.275);border-left:3px solid}
+        .atoast.dng{border-left-color:var(--danger)}.atoast.wrn{border-left-color:var(--warn)}.atoast.suc{border-left-color:var(--success)}
+        @keyframes asin{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+        .aicon{font-size:1.2rem}.atoast.dng .aicon{color:var(--danger)}.atoast.wrn .aicon{color:var(--warn)}.atoast.suc .aicon{color:var(--success)}
+        .acontent{flex:1}.atitle{font-weight:700;font-size:.8rem}.amsg{font-size:.7rem;color:var(--dim)}
+        .aclose{background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:.85rem;padding:3px}
+        .sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+        .sitem{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:15px;text-align:center;transition:.3s}
+        .sitem:hover{transform:translateY(-3px);border-color:rgba(255,255,255,0.1)}
+        .sico{font-size:1.2rem;margin-bottom:4px;opacity:.5}.sval{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:700}.slbl{font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-top:2px}
+        .lpanel{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:18px;padding:22px;max-height:280px;overflow-y:auto}
+        .lpanel::-webkit-scrollbar{width:3px}.lpanel::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
+        .ltbl{width:100%;border-collapse:separate;border-spacing:0 2px}
+        .ltbl th{font-family:'Orbitron',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.2);padding:6px 10px;text-align:left}
+        .ltbl td{padding:6px 10px;font-family:'Share Tech Mono',monospace;font-size:.75rem;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.01)}
+        .ltbl tr td:first-child{border-radius:5px 0 0 5px}.ltbl tr td:last-child{border-radius:0 5px 5px 0}
+        .lst{padding:2px 7px;border-radius:8px;font-size:.6rem;font-weight:600}
+        .lst.ok{background:rgba(0,255,136,0.1);color:var(--success)}.lst.wr{background:rgba(255,193,7,0.1);color:var(--warn)}.lst.dg{background:rgba(255,46,99,0.1);color:var(--danger)}
+        .foot{position:relative;z-index:1;text-align:center;padding:30px 15px;margin-top:40px;border-top:1px solid rgba(255,255,255,0.04)}
+        .foot-b{font-family:'Orbitron',monospace;font-size:.8rem;color:rgba(255,255,255,0.2)}.foot-i{font-size:.65rem;color:rgba(255,255,255,0.1);margin-top:3px}
+        @keyframes vpop{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+        .vupd{animation:vpop .3s ease}
+        @keyframes fiu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .ain{animation:fiu .5s ease forwards;opacity:0}
+        .d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}.d4{animation-delay:.35s}.d5{animation-delay:.4s}.d6{animation-delay:.45s}
+        @media(max-width:768px){.hero h1{font-size:1.4rem}.vtxt{font-size:1.6rem}.mcard{padding:16px}.top-nav{padding:6px 10px}.hero{padding:85px 0 25px}}
+    </style>
+</head>
+<body>
+<div class="loading-screen" id="ls"><div class="loader"></div><div class="loader-text">Initializing...</div><div class="load-bar"><div class="load-fill"></div></div></div>
+<canvas id="particles-canvas"></canvas>
+<div class="grid-bg"></div>
+<div class="aurora"></div>
+<div class="alert-c" id="alert-c"></div>
+<nav class="top-nav">
+    <div class="nav-brand"><i class="fas fa-bolt"></i> ElectraVision</div>
+    <div class="nav-items">
+        <span class="demo-tag" id="demo-tag">DEMO</span>
+        <div class="nav-status"><div class="nav-dot" id="ndot"></div><span id="nst">Connecting...</span></div>
+        <div class="nav-status"><i class="fas fa-clock" style="color:var(--purple);font-size:.65rem"></i><span id="nut">00:00:00</span></div>
+        <button class="nav-btn" onclick="exportCSV()"><i class="fas fa-download"></i>Export</button>
+        <button class="nav-btn" onclick="document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()"><i class="fas fa-expand"></i></button>
+    </div>
+</nav>
+<div class="hero">
+    <div class="hero-icon">⚡</div>
+    <h1>ElectraVision</h1>
+    <p>Smart Grid Monitoring System</p>
+    <div class="hero-meta">
+        <div class="meta-item"><i class="far fa-clock"></i><span id="ht">--:--:--</span></div>
+        <div class="meta-item"><i class="far fa-calendar"></i><span id="hd">Loading...</span></div>
+        <div class="meta-item"><i class="fas fa-tachometer-alt"></i><span>2s Refresh</span></div>
+        <div class="meta-item"><i class="fas fa-database"></i><span id="dp">0 samples</span></div>
+    </div>
+</div>
+<div class="container main">
+<div class="stitle"><i class="fas fa-chart-bar"></i>Primary Metrics</div>
+<div class="row g-3">
+    <div class="col-lg-4 col-md-6 ain d1">
+        <div class="mcard vc" id="vcard"><i class="fas fa-bolt cibg"></i>
+            <div class="ctop"><div class="clbl"><i class="fas fa-bolt" style="color:var(--volt)"></i>Voltage</div><div class="tbadge tst" id="vt"><i class="fas fa-minus"></i>0%</div></div>
+            <div class="vrow"><div class="vtxt vv" id="vol">0.00</div><div class="utxt">V</div></div>
+            <div class="mbar-c"><div class="mbar vbar" id="vb" style="width:0%"></div></div>
+            <div class="mstats"><div class="mst"><div class="mst-l">Min</div><div class="mst-v" id="vmn">--</div></div><div class="mst"><div class="mst-l">Avg</div><div class="mst-v" id="vav">--</div></div><div class="mst"><div class="mst-l">Max</div><div class="mst-v" id="vmx">--</div></div></div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6 ain d2">
+        <div class="mcard cc" id="ccard"><i class="fas fa-wave-square cibg"></i>
+            <div class="ctop"><div class="clbl"><i class="fas fa-wave-square" style="color:var(--curr)"></i>Current</div><div class="tbadge tst" id="ct"><i class="fas fa-minus"></i>0%</div></div>
+            <div class="vrow"><div class="vtxt cv" id="cur">0.00</div><div class="utxt">A</div></div>
+            <div class="mbar-c"><div class="mbar cbar" id="cb" style="width:0%"></div></div>
+            <div class="mstats"><div class="mst"><div class="mst-l">Min</div><div class="mst-v" id="cmn">--</div></div><div class="mst"><div class="mst-l">Avg</div><div class="mst-v" id="cav">--</div></div><div class="mst"><div class="mst-l">Max</div><div class="mst-v" id="cmx">--</div></div></div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-12 ain d3">
+        <div class="mcard pc" id="pcard"><i class="fas fa-fire cibg"></i>
+            <div class="ctop"><div class="clbl"><i class="fas fa-fire" style="color:var(--pow)"></i>Power</div><div class="tbadge tst" id="pt"><i class="fas fa-minus"></i>0%</div></div>
+            <div class="vrow"><div class="vtxt pv" id="pow">0.00</div><div class="utxt">W</div></div>
+            <div class="mbar-c"><div class="mbar pbar" id="pb" style="width:0%"></div></div>
+            <div class="mstats"><div class="mst"><div class="mst-l">Min</div><div class="mst-v" id="pmn">--</div></div><div class="mst"><div class="mst-l">Avg</div><div class="mst-v" id="pav">--</div></div><div class="mst"><div class="mst-l">Max</div><div class="mst-v" id="pmx">--</div></div></div>
+        </div>
+    </div>
+</div>
+<div class="stitle mt-4"><i class="fas fa-sliders-h"></i>Secondary Metrics</div>
+<div class="row g-3">
+    <div class="col-lg-4 col-md-6 ain d4">
+        <div class="mcard ec"><i class="fas fa-battery-three-quarters cibg"></i>
+            <div class="clbl"><i class="fas fa-battery-three-quarters" style="color:var(--energy)"></i>Energy</div>
+            <div class="vrow"><div class="vtxt ev" id="eng">0.000</div><div class="utxt">kWh</div></div>
+            <div class="mbar-c"><div class="mbar ebar" id="eb" style="width:0%"></div></div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6 ain d5">
+        <div class="mcard fc"><i class="fas fa-signal cibg"></i>
+            <div class="clbl"><i class="fas fa-signal" style="color:var(--freq)"></i>Frequency</div>
+            <div class="vrow"><div class="vtxt fv" id="frq">0.00</div><div class="utxt">Hz</div></div>
+            <div class="mbar-c"><div class="mbar fbar" id="fb" style="width:0%"></div></div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-12 ain d6">
+        <div class="mcard pfc"><i class="fas fa-circle-notch cibg"></i>
+            <div class="clbl"><i class="fas fa-circle-notch" style="color:var(--pf)"></i>Power Factor</div>
+            <div class="qring">
+                <svg viewBox="0 0 200 200"><circle class="rbg" cx="100" cy="100" r="80"/><circle class="rfill" id="pfr" cx="100" cy="100" r="80" stroke="var(--pf)" stroke-dasharray="502.65" stroke-dashoffset="502.65"/></svg>
+                <div class="rcenter"><div class="rval pfv" id="pfv">0.00</div><div class="rlbl">PF</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row g-3 mt-3">
+    <div class="col-lg-8 ain d2">
+        <div class="cpanel">
+            <div class="chdr">
+                <div class="chtl"><div class="ldot"></div>Live Data Stream</div>
+                <div style="display:flex;gap:4px">
+                    <button class="cbtn act" onclick="setType('line',this)">Line</button>
+                    <button class="cbtn" onclick="setType('bar',this)">Bar</button>
+                    <button class="cbtn" onclick="clearCh()">Clear</button>
+                </div>
+            </div>
+            <canvas id="mainCh" height="110"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-4 ain d3">
+        <div class="cpanel">
+            <div class="chdr"><div class="chtl">Distribution</div></div>
+            <canvas id="dnutCh" height="200"></canvas>
+        </div>
+    </div>
+</div>
+<div class="row g-3 mt-2">
+    <div class="col-lg-6 ain d4">
+        <div class="cpanel"><div class="chdr"><div class="chtl">Voltage Stability</div></div><canvas id="voltCh" height="115"></canvas></div>
+    </div>
+    <div class="col-lg-6 ain d5">
+        <div class="cpanel"><div class="chdr"><div class="chtl">Power Trend</div></div><canvas id="powCh" height="115"></canvas></div>
+    </div>
+</div>
+<div class="stitle mt-4"><i class="fas fa-th-large"></i>System Summary</div>
+<div class="sgrid ain d2">
+    <div class="sitem"><div class="sico">📊</div><div class="sval" id="ts" style="color:var(--blue)">0</div><div class="slbl">Samples</div></div>
+    <div class="sitem"><div class="sico">⚡</div><div class="sval" id="pp" style="color:var(--pow)">0W</div><div class="slbl">Peak Power</div></div>
+    <div class="sitem"><div class="sico">🔌</div><div class="sval" id="av" style="color:var(--volt)">0V</div><div class="slbl">Avg Voltage</div></div>
+    <div class="sitem"><div class="sico">⏱️</div><div class="sval" id="ud" style="color:var(--purple)">00:00</div><div class="slbl">Uptime</div></div>
+    <div class="sitem"><div class="sico">🌡️</div><div class="sval" id="eff" style="color:var(--success)">0%</div><div class="slbl">Efficiency</div></div>
+    <div class="sitem"><div class="sico">🔔</div><div class="sval" id="ac" style="color:var(--danger)">0</div><div class="slbl">Alerts</div></div>
+</div>
+<div class="stitle mt-4"><i class="fas fa-list-alt"></i>Data Log</div>
+<div class="lpanel ain d3" id="lp">
+    <table class="ltbl">
+        <thead><tr><th>Time</th><th>Voltage</th><th>Current</th><th>Power</th><th>Freq</th><th>Energy</th><th>Status</th></tr></thead>
+        <tbody id="lb"><tr><td colspan="7" style="text-align:center;color:var(--dim)">Waiting for data...</td></tr></tbody>
+    </table>
+</div>
+</div>
+<div class="foot"><div class="foot-b">⚡ ElectraVision v3.0</div><div class="foot-i">Graduation Project 2025 | Built with 💜</div></div>
+
+<script>
+const S={t0:Date.now(),n:0,ac:0,lt:Date.now(),prev:{v:0,c:0,p:0},hist:{v:[],c:[],p:[]},th:{v:{max:250,w:235},c:{max:20,w:15},p:{max:5000,w:4000}},maxC:25,maxL:35,logs:[]};
+
+// Loading
+window.addEventListener('load',()=>{setTimeout(()=>{document.getElementById('ls').classList.add('hidden');showA('suc','System Online','ElectraVision ready — connecting to server...')},2000)});
+
+// Particles
+const pc=document.getElementById('particles-canvas'),px=pc.getContext('2d');let pts=[];
+function rpc(){pc.width=innerWidth;pc.height=innerHeight}rpc();window.addEventListener('resize',rpc);
+class P{constructor(){this.x=Math.random()*pc.width;this.y=Math.random()*pc.height;this.s=Math.random()*1.5+.5;this.vx=(Math.random()-.5)*.3;this.vy=(Math.random()-.5)*.3;this.o=Math.random()*.4+.1;this.cl=['0,245,255','123,47,247','255,46,99'][~~(Math.random()*3)]}update(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>pc.width)this.vx*=-1;if(this.y<0||this.y>pc.height)this.vy*=-1}draw(){px.beginPath();px.arc(this.x,this.y,this.s,0,Math.PI*2);px.fillStyle=`rgba(${this.cl},${this.o})`;px.fill()}}
+for(let i=0;i<Math.min(50,~~(innerWidth/25));i++)pts.push(new P);
+function ap(){px.clearRect(0,0,pc.width,pc.height);for(let i=0;i<pts.length;i++){pts[i].update();pts[i].draw();for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){px.beginPath();px.strokeStyle=`rgba(123,47,247,${.05*(1-d/100)})`;px.lineWidth=.5;px.moveTo(pts[i].x,pts[i].y);px.lineTo(pts[j].x,pts[j].y);px.stroke()}}}requestAnimationFrame(ap)}ap();
+
+// Clock
+function uc(){const n=new Date;document.getElementById('ht').textContent=n.toLocaleTimeString('en-US',{hour12:true});document.getElementById('hd').textContent=n.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});const e=Date.now()-S.t0,h=String(~~(e/36e5)).padStart(2,'0'),m=String(~~(e%36e5/6e4)).padStart(2,'0'),s=String(~~(e%6e4/1e3)).padStart(2,'0');document.getElementById('nut').textContent=`${h}:${m}:${s}`;document.getElementById('ud').textContent=`${h}:${m}`}
+setInterval(uc,1000);uc();
+
+// Charts
+const co={responsive:true,animation:{duration:300},scales:{x:{ticks:{color:'rgba(255,255,255,0.15)',maxTicksLimit:7,font:{size:9}},grid:{color:'rgba(255,255,255,0.02)'}},y:{ticks:{color:'rgba(255,255,255,0.15)',font:{size:9}},grid:{color:'rgba(255,255,255,0.03)'}}},plugins:{legend:{labels:{color:'rgba(255,255,255,0.3)',usePointStyle:true,padding:10,font:{size:9}}}}};
+const mL=[],mV=[],mC=[],mP=[];
+const mainCh=new Chart(document.getElementById('mainCh').getContext('2d'),{type:'line',data:{labels:mL,datasets:[{label:'Voltage(V)',data:mV,borderColor:'rgba(255,193,7,0.8)',backgroundColor:'rgba(255,193,7,0.05)',borderWidth:2,fill:true,tension:.4,pointRadius:1.5},{label:'Current(A)',data:mC,borderColor:'rgba(0,212,255,0.8)',backgroundColor:'rgba(0,212,255,0.05)',borderWidth:2,fill:true,tension:.4,pointRadius:1.5},{label:'Power(W)',data:mP,borderColor:'rgba(0,255,136,0.8)',backgroundColor:'rgba(0,255,136,0.05)',borderWidth:2,fill:true,tension:.4,pointRadius:1.5}]},options:co});
+const dnutCh=new Chart(document.getElementById('dnutCh').getContext('2d'),{type:'doughnut',data:{labels:['Voltage','Current','Reactive'],datasets:[{data:[33,33,34],backgroundColor:['rgba(255,193,7,0.7)','rgba(0,212,255,0.7)','rgba(0,255,136,0.7)'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,0.3)',padding:8,font:{size:9},usePointStyle:true}}},cutout:'72%'}});
+const vL=[],vD=[];
+const voltCh=new Chart(document.getElementById('voltCh').getContext('2d'),{type:'line',data:{labels:vL,datasets:[{label:'V',data:vD,borderColor:'rgba(255,193,7,0.8)',backgroundColor:'rgba(255,193,7,0.08)',borderWidth:2,fill:true,tension:.3,pointRadius:1}]},options:{...co,plugins:{legend:{display:false}}}});
+const pL=[],pD=[];
+const powCh=new Chart(document.getElementById('powCh').getContext('2d'),{type:'bar',data:{labels:pL,datasets:[{label:'W',data:pD,backgroundColor:'rgba(0,255,136,0.25)',borderColor:'rgba(0,255,136,0.5)',borderWidth:1,borderRadius:3}]},options:{...co,plugins:{legend:{display:false}}}});
+
+// Demo fallback generator — now includes energy & frequency
+function genDemo(){
+    const bv=220+Math.sin(Date.now()/5000)*15,bc=5+Math.sin(Date.now()/7000)*3;
+    const v=+(bv+(Math.random()-.5)*10).toFixed(2);
+    const c=+(Math.abs(bc)+Math.random()*2).toFixed(2);
+    const f=+(49.5+Math.random()*1).toFixed(2);
+    const pf=+(.8+Math.random()*.19).toFixed(2);
+    const p=+(v*c*pf).toFixed(2);
+    // Accumulate energy locally in demo mode
+    const dt=(Date.now()-S.lt)/36e5;
+    S.demoEnergy=(S.demoEnergy||0)+(p/1000)*dt;
+    return{v,c,f,pf,p,energy:+S.demoEnergy.toFixed(4)};
+}
+
+// Alerts
+function showA(type,title,msg){const c=document.getElementById('alert-c');const ic={dng:'fa-exclamation-triangle',wrn:'fa-exclamation-circle',suc:'fa-check-circle'};const t=document.createElement('div');t.className=`atoast ${type}`;t.innerHTML=`<div class="aicon"><i class="fas ${ic[type]||'fa-info-circle'}"></i></div><div class="acontent"><div class="atitle">${title}</div><div class="amsg">${msg}</div></div><button class="aclose" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;c.appendChild(t);S.ac++;document.getElementById('ac').textContent=S.ac;setTimeout(()=>{if(t.parentElement)t.remove()},4500)}
+
+// Helpers
+function anim(id,val){const el=document.getElementById(id);el.textContent=val;el.classList.remove('vupd');void el.offsetWidth;el.classList.add('vupd')}
+function stats(a){if(!a.length)return{mn:'--',av:'--',mx:'--'};return{mn:Math.min(...a).toFixed(1),av:(a.reduce((s,v)=>s+v,0)/a.length).toFixed(1),mx:Math.max(...a).toFixed(1)}}
+function trend(c,p){if(!p)return{cl:'tst',ic:'fa-minus',tx:'0%'};const ch=((c-p)/p*100).toFixed(1);if(Math.abs(ch)<1)return{cl:'tst',ic:'fa-minus',tx:'0%'};return ch>0?{cl:'tup',ic:'fa-arrow-up',tx:`+${ch}%`}:{cl:'tdn',ic:'fa-arrow-down',tx:`${ch}%`}}
+
+function setType(t,btn){mainCh.config.type=t;mainCh.update();document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('act'));btn.classList.add('act')}
+function clearCh(){mL.length=0;mV.length=0;mC.length=0;mP.length=0;vL.length=0;vD.length=0;pL.length=0;pD.length=0;mainCh.update();voltCh.update();powCh.update()}
+
+function exportCSV(){if(!S.logs.length)return alert('No data to export');let csv='Time,Voltage(V),Current(A),Power(W),Frequency(Hz),Energy(kWh),Status\n';S.logs.forEach(l=>{csv+=`${l.t},${l.v},${l.c},${l.p},${l.f},${l.e},${l.s}\n`});const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`electravision_${Date.now()}.csv`;a.click()}
+
+// ── MAIN UPDATE ────────────────────────────────────────────────────────────
+let alertCooldown={v:0,c:0,p:0};
+
+function update(){
+    fetch('/data')
+        .then(r=>{if(!r.ok)throw'err';return r.json()})
+        .then(d=>{
+            // Server returns all 6 fields — use them directly
+            const data={
+                v: +(d.voltage   || 0),
+                c: +(d.current   || 0),
+                p: +(d.power     || d.voltage * d.current * (d.pf||1) || 0),
+                f: +(d.frequency || 50.0),
+                pf:+(d.pf        || 1.0),
+                energy: +(d.energy || 0),
+            };
+            document.getElementById('demo-tag').style.display='none';
+            process(data, false);
+        })
+        .catch(()=>{
+            // Demo fallback — server not reachable
+            document.getElementById('demo-tag').style.display='';
+            const d=genDemo();
+            process({v:d.v,c:d.c,p:d.p,f:d.f,pf:d.pf,energy:d.energy}, true);
+        });
+}
+
+function process(d, isDemo){
+    const now=new Date, ts=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    S.n++;
+    S.lt=Date.now();
+
+    // History
+    S.hist.v.push(d.v);S.hist.c.push(d.c);S.hist.p.push(d.p);
+    if(S.hist.v.length>200){S.hist.v.shift();S.hist.c.shift();S.hist.p.shift()}
+
+    // ── Primary values ──
+    anim('vol', d.v.toFixed(2));
+    anim('cur', d.c.toFixed(2));
+    anim('pow', d.p.toFixed(2));
+
+    // ── Secondary values (now from server) ──
+    anim('eng', d.energy.toFixed(3));    // real energy from simulator/server
+    anim('frq', d.f.toFixed(2));         // real frequency from simulator/server
+
+    // PF Ring
+    document.getElementById('pfv').textContent=d.pf.toFixed(2);
+    document.getElementById('pfr').style.strokeDashoffset=502.65*(1-d.pf);
+
+    // Bars
+    document.getElementById('vb').style.width=Math.min(d.v/260*100,100)+'%';
+    document.getElementById('cb').style.width=Math.min(d.c/20*100,100)+'%';
+    document.getElementById('pb').style.width=Math.min(d.p/5000*100,100)+'%';
+    document.getElementById('eb').style.width=Math.min(d.energy/10*100,100)+'%';
+    document.getElementById('fb').style.width=Math.min((d.f-45)/15*100,100)+'%';  // scale 45-60 Hz
+
+    // Trends
+    [{k:'v',id:'vt',val:d.v},{k:'c',id:'ct',val:d.c},{k:'p',id:'pt',val:d.p}].forEach(x=>{
+        const t=trend(x.val,S.prev[x.k]);
+        const el=document.getElementById(x.id);
+        el.className=`tbadge ${t.cl}`;
+        el.innerHTML=`<i class="fas ${t.ic}"></i>${t.tx}`;
+    });
+
+    // Min/Avg/Max
+    const vs=stats(S.hist.v),cs=stats(S.hist.c),ps=stats(S.hist.p);
+    document.getElementById('vmn').textContent=vs.mn;document.getElementById('vav').textContent=vs.av;document.getElementById('vmx').textContent=vs.mx;
+    document.getElementById('cmn').textContent=cs.mn;document.getElementById('cav').textContent=cs.av;document.getElementById('cmx').textContent=cs.mx;
+    document.getElementById('pmn').textContent=ps.mn;document.getElementById('pav').textContent=ps.av;document.getElementById('pmx').textContent=ps.mx;
+
+    // Alerts
+    const now2=Date.now();
+    if(d.v>S.th.v.max&&now2-alertCooldown.v>15000){showA('dng','HIGH VOLTAGE!',`${d.v}V exceeds ${S.th.v.max}V limit`);alertCooldown.v=now2;document.getElementById('vcard').classList.add('alert-on');setTimeout(()=>document.getElementById('vcard').classList.remove('alert-on'),3000)}
+    else if(d.v>S.th.v.w&&now2-alertCooldown.v>15000){showA('wrn','Voltage Warning',`${d.v}V approaching limit`);alertCooldown.v=now2}
+    if(d.c>S.th.c.max&&now2-alertCooldown.c>15000){showA('dng','OVERCURRENT!',`${d.c}A exceeds ${S.th.c.max}A limit`);alertCooldown.c=now2;document.getElementById('ccard').classList.add('alert-on');setTimeout(()=>document.getElementById('ccard').classList.remove('alert-on'),3000)}
+    if(d.p>S.th.p.w&&now2-alertCooldown.p>15000){showA('wrn','High Power',`${d.p}W approaching limit`);alertCooldown.p=now2}
+    // Frequency deviation alert
+    if((d.f<49.0||d.f>51.0)&&now2-alertCooldown.v>15000){showA('wrn','Frequency Deviation',`${d.f}Hz outside 49–51 Hz range`)}
+
+    // Charts
+    mL.push(ts);mV.push(d.v);mC.push(d.c);mP.push(d.p);
+    if(mL.length>S.maxC){mL.shift();mV.shift();mC.shift();mP.shift()}
+    mainCh.update();
+    vL.push(ts);vD.push(d.v);if(vL.length>S.maxC){vL.shift();vD.shift()}voltCh.update();
+    pL.push(ts);pD.push(d.p);if(pL.length>S.maxC){pL.shift();pD.shift()}powCh.update();
+
+    // Doughnut
+    const total=d.v+d.c*10+d.p/50;
+    dnutCh.data.datasets[0].data=[d.v/total*100,d.c*10/total*100,d.p/50/total*100];
+    dnutCh.update();
+
+    // Status dot
+    document.getElementById('ndot').classList.add('on');
+    document.getElementById('nst').textContent=isDemo?'Demo':'Online';
+    document.getElementById('nst').style.color=isDemo?'var(--warn)':'var(--success)';
+
+    // Summary
+    document.getElementById('ts').textContent=S.n;
+    document.getElementById('dp').textContent=S.n+' samples';
+    document.getElementById('pp').textContent=(S.hist.p.length?Math.max(...S.hist.p):0).toFixed(0)+'W';
+    document.getElementById('av').textContent=(S.hist.v.reduce((a,b)=>a+b,0)/S.hist.v.length).toFixed(1)+'V';
+    document.getElementById('eff').textContent=(d.pf*100).toFixed(0)+'%';
+
+    // Log — now includes Freq & Energy columns
+    const status=d.v>S.th.v.max||d.c>S.th.c.max?'DANGER':d.v>S.th.v.w||d.c>S.th.c.w?'WARN':'OK';
+    S.logs.unshift({t:ts,v:d.v,c:d.c,p:d.p,f:d.f,e:d.energy,s:status});
+    if(S.logs.length>S.maxL)S.logs.pop();
+    document.getElementById('lb').innerHTML=S.logs.map(l=>`<tr><td>${l.t}</td><td>${l.v}V</td><td>${l.c}A</td><td>${l.p}W</td><td>${l.f}Hz</td><td>${l.e}kWh</td><td><span class="lst ${l.s==='DANGER'?'dg':l.s==='WARN'?'wr':'ok'}">${l.s}</span></td></tr>`).join('');
+
+    S.prev={v:d.v,c:d.c,p:d.p};
+}
+
+setInterval(update,2000);
+setTimeout(update,500);
+</script>
+</body>
+</html>
